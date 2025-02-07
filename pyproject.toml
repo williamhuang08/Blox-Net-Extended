@@ -1,0 +1,19 @@
+[project]
+name = "bloxnet"
+version = "0.0.1"
+
+dependencies=[
+  "matplotlib",
+  "numpy",
+  "openai",
+  "pybullet",
+  "tqdm",
+  "scipy",
+  "python-dotenv",
+  "pandas",
+  "pyvista",
+  "opencv-python",
+]
+
+[tool.setuptools]
+packages = ["bloxnet", "perturbation_analysis"]
