@@ -16,4 +16,4 @@ dependencies=[
 ]
 
 [tool.setuptools]
-packages = ["bloxnet", "perturbation_analysis"]
+packages = ["bloxnet", "perturbation_analysis", "scripts"]
