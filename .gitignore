@@ -3,6 +3,7 @@ gpt_caching
 images
 .DS_Store
 perturbation_analysis/perturbation_analysis
+errors/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
