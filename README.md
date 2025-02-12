@@ -1,7 +1,6 @@
 <h1 align="left">
     <img alt="bloxnet_giraffe" src="assets/bloxnet_giraffe.png" width="auto" height="30" />
     Blox-Net
-    <!-- <img alt="bloxnet_giraffe" src="assets/bloxnet_giraffe.png" width="auto" height="30" /> -->
 </h1>
 
 ## Generative Design-for-Robot-Assembly using VLM Supervision, Physics Simulation, and A Robot with Reset
