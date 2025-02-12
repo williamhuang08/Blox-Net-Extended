@@ -39,7 +39,7 @@ To call GPT, create a ```.env``` file in the home directory of the repository an
 ## Generating Structures
 To generate structures using Blox-Net's iterative physics-grounded prompting, run ```python scripts/full_pipeline.py``` after adjusting the ```structure_names``` list.
 
-WARNING: The max_workers parameter in ```full_pipeline.py``` and ```run_pipeline_single_obj_parallel.py``` might need to be adjusted on low memory systems (< 32 GB of RAM)
+- WARNING: The max_workers parameter in ```full_pipeline.py``` and ```run_pipeline_single_obj_parallel.py``` might need to be adjusted on low memory systems (< 32 GB of RAM)
 
 
 10 versions of each structure are generated; structures and all prompts are saved in ```gpt_caching/{structure_name}```, and the best assembly is selected by ChatGPT and saved in the ```best_assembly``` subdirectory. Inside each structure directory, PyBullet renders are saved and the subdirectories ```prompts```, ```responses```, and ```context``` include the VLM conversation history.
