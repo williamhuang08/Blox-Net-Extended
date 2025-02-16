@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 from bloxnet.structure import Assembly
 
+
 def save_visual(blocks, save_path):
     # Initialize a PyVista plotter
     plotter = pv.Plotter()
@@ -16,26 +17,31 @@ def save_visual(blocks, save_path):
     for i, block in enumerate(blocks):
         dim = block["dimensions"]
         if block["shape"] == "cuboid":
-            x, y, z = dim['x'], dim['y'], dim['z']
-            mesh = pv.Box([
-                -x/2, x/2,
-                -y/2, y/2,
-                -z/2, z/2,
-            ])
+            x, y, z = dim["x"], dim["y"], dim["z"]
+            mesh = pv.Box(
+                [
+                    -x / 2,
+                    x / 2,
+                    -y / 2,
+                    y / 2,
+                    -z / 2,
+                    z / 2,
+                ]
+            )
         elif block["shape"] == "cylinder":
-            radius, height = dim['radius'], dim['height']
+            radius, height = dim["radius"], dim["height"]
             mesh = pv.Cylinder(
                 radius=radius,
                 height=height,
-                direction=(0,0,1),
+                direction=(0, 0, 1),
             )
         elif block["shape"] == "cone":
-            radius, height = dim['radius'], dim['height']
+            radius, height = dim["radius"], dim["height"]
             mesh = pv.Cone(
                 radius=radius,
                 height=height,
-                direction=(0,0,1),
-                center=(0,0,height/2),
+                direction=(0, 0, 1),
+                center=(0, 0, height / 2),
                 resolution=100,
             )
         else:
@@ -55,7 +61,7 @@ def save_visual(blocks, save_path):
 
         plotter.add_mesh(mesh, color=color)
 
-    plotter.set_background('white')
+    plotter.set_background("white")
     plotter.show_axes()
 
     # Get directory path
@@ -74,11 +80,15 @@ def save_visual(blocks, save_path):
     # delete the svg file
     # os.remove(save_svg_path)
 
+
 def save_assembly_visual(assembly, save_path):
     save_visual(assembly.structure.get_json(), save_path)
+
 
 paths = glob.glob("gpt_caching/*/*.pkl")
 for path in paths:
     assembly = Assembly.load(path)
-    save_path = os.path.join(os.path.dirname(path), f"pretty_viz_{assembly.assembly_num}.svg")
+    save_path = os.path.join(
+        os.path.dirname(path), f"pretty_viz_{assembly.assembly_num}.svg"
+    )
     save_assembly_visual(assembly, save_path)

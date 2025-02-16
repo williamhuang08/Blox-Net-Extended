@@ -4,10 +4,11 @@ For checking if designs use blocks which aren't part of the blockset or use too 
 from get_best_objects_by_ratings import get_sorted_assemblies_by_rating
 import json
 
+
 def verify_assembly(assembly, blockset_path):
     with open(blockset_path, "r") as f:
         blockset = json.load(f)
-    
+
     block_dims_ls = [
         [block_info["number_available"], sorted(block_info["dimensions"].values())]
         for block_info in blockset.values()
@@ -26,7 +27,7 @@ def verify_assembly(assembly, blockset_path):
         else:
             # print("Block not in available:", block)
             return_value = 2
-        
+
     return return_value
 
 
@@ -40,6 +41,5 @@ if __name__ == "__main__":
         verification_ls[i] = verified == 1
         if verified == 1:
             print(a.to_build)
-    
-    print("total proportion: ", sum(verification_ls) / len(assemblies))
 
+    print("total proportion: ", sum(verification_ls) / len(assemblies))

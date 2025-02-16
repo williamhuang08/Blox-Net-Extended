@@ -5,6 +5,7 @@ import numpy as np
 
 EPSILON = 1e-4
 
+
 def init_pybullet(gui=False):
     # Connect to PyBullet if not already connected
     if not p.isConnected():
@@ -15,6 +16,7 @@ def init_pybullet(gui=False):
 
     # Set additional search path for PyBullet data
     p.setAdditionalSearchPath(pybullet_data.getDataPath())
+
 
 def create_cuboid(name, dimensions, position, yaw_angle, color=[1, 0, 0, 1]):
     """
@@ -35,10 +37,19 @@ def create_cuboid(name, dimensions, position, yaw_angle, color=[1, 0, 0, 1]):
     mass = density * dimensions_m[0] * dimensions_m[1] * dimensions_m[2]
 
     collision_shape = p.createCollisionShape(p.GEOM_BOX, halfExtents=half_extents)
-    visual_shape = p.createVisualShape(p.GEOM_BOX, halfExtents=half_extents, rgbaColor=color)
-    id = p.createMultiBody(baseMass=mass, baseCollisionShapeIndex=collision_shape, baseVisualShapeIndex=visual_shape, basePosition=position_m, baseOrientation=orientation)
+    visual_shape = p.createVisualShape(
+        p.GEOM_BOX, halfExtents=half_extents, rgbaColor=color
+    )
+    id = p.createMultiBody(
+        baseMass=mass,
+        baseCollisionShapeIndex=collision_shape,
+        baseVisualShapeIndex=visual_shape,
+        basePosition=position_m,
+        baseOrientation=orientation,
+    )
 
     return id
+
 
 def create_cylinder(name, radius, height, position, color=[1, 0, 0, 1]):
     """
@@ -58,13 +69,24 @@ def create_cylinder(name, radius, height, position, color=[1, 0, 0, 1]):
     density = 1000  # Density of the block in kg/m^3
     mass = density * np.pi * radius_m**2 * height_m
 
-    collision_shape = p.createCollisionShape(p.GEOM_CYLINDER, radius=radius_m, height=height_m)
-    visual_shape = p.createVisualShape(p.GEOM_CYLINDER, radius=radius_m, length=height_m, rgbaColor=color)
-    id = p.createMultiBody(baseMass=mass, baseCollisionShapeIndex=collision_shape, baseVisualShapeIndex=visual_shape, basePosition=position_m, baseOrientation=orientation)
-    
+    collision_shape = p.createCollisionShape(
+        p.GEOM_CYLINDER, radius=radius_m, height=height_m
+    )
+    visual_shape = p.createVisualShape(
+        p.GEOM_CYLINDER, radius=radius_m, length=height_m, rgbaColor=color
+    )
+    id = p.createMultiBody(
+        baseMass=mass,
+        baseCollisionShapeIndex=collision_shape,
+        baseVisualShapeIndex=visual_shape,
+        basePosition=position_m,
+        baseOrientation=orientation,
+    )
+
     return id
 
-def check_body_collision(bodyID = -1):
+
+def check_body_collision(bodyID=-1):
     p.performCollisionDetection()
     contact_points = p.getContactPoints()
 
@@ -81,17 +103,19 @@ def check_body_collision(bodyID = -1):
 def move_until_contact(id, direction, step_size=0.01, debug=False):
     # normalize direction
     direction = np.array(direction) / np.linalg.norm(direction)
-    
+
     # Keep moving the object until it makes contact with another object
-    while not check_body_collision(id):       
+    while not check_body_collision(id):
         # Get the current position and orientation of the object
-        pos, ori = p.getBasePositionAndOrientation(id)     
+        pos, ori = p.getBasePositionAndOrientation(id)
         new_pos = np.array(pos) + np.array(direction) * step_size
         p.resetBasePositionAndOrientation(id, new_pos, ori)
-        if debug: time.sleep(0.002)
+        if debug:
+            time.sleep(0.002)
+
 
 def move_out_of_contact(id):
-    for _ in range(100): 
+    for _ in range(100):
         p.performCollisionDetection()
         contacts = p.getContactPoints()
 
@@ -117,17 +141,19 @@ def move_out_of_contact(id):
         posA = np.array(contact[5])
         posB = np.array(contact[6])
         normalB = np.array(contact[7])
-        contactDistance = contact[8] 
+        contactDistance = contact[8]
 
         # move body B in normalB * contactDistance
         bodyB_pos, bodyB_ori = p.getBasePositionAndOrientation(bodyB)
-        p.resetBasePositionAndOrientation(bodyB, bodyB_pos + normalB * contactDistance, bodyB_ori)
+        p.resetBasePositionAndOrientation(
+            bodyB, bodyB_pos + normalB * contactDistance, bodyB_ori
+        )
 
 
 def place_blocks(blocks, blockset):
     # Reset simulation
     p.resetSimulation()
-    plane = p.loadURDF("plane.urdf") # Load plane (ground)
+    plane = p.loadURDF("plane.urdf")  # Load plane (ground)
 
     # set gravity
     p.setGravity(0, 0, -9.81)
@@ -147,19 +173,21 @@ def place_blocks(blocks, blockset):
             dimensions = [
                 blockset[block["name"]]["dimensions"]["x"],
                 blockset[block["name"]]["dimensions"]["y"],
-                blockset[block["name"]]["dimensions"]["z"]
+                blockset[block["name"]]["dimensions"]["z"],
             ]
 
-            id = create_cuboid(block["name"], dimensions, position, yaw_angle, [1,0,0,1])
+            id = create_cuboid(
+                block["name"], dimensions, position, yaw_angle, [1, 0, 0, 1]
+            )
 
         elif block_type == "cylinder":
             radius = blockset[block["name"]]["dimensions"]["radius"]
             height = blockset[block["name"]]["dimensions"]["height"]
 
-            id = create_cylinder(block["name"], radius, height, position, [1,0,0,1])  
+            id = create_cylinder(block["name"], radius, height, position, [1, 0, 0, 1])
 
         # Move the block until it makes contact with another object
-        move_until_contact(id, direction=[0,0,-1], step_size=0.001, debug=True)
+        move_until_contact(id, direction=[0, 0, -1], step_size=0.001, debug=True)
 
         # Move the block out of contact
         move_out_of_contact(id)
@@ -170,11 +198,12 @@ def place_blocks(blocks, blockset):
             "name": block["name"],
             "id": id,
             "position": position,
-            "yaw_angle": yaw_angle
+            "yaw_angle": yaw_angle,
         }
         structure_json_w_ids.append(block_json)
 
     return structure_json_w_ids
+
 
 def move_block(block_num, answer, structure_json_w_ids):
     for block in structure_json_w_ids:
@@ -185,12 +214,14 @@ def move_block(block_num, answer, structure_json_w_ids):
             break
     return structure_json_w_ids
 
+
 def rotate_block(block_num, answer, structure_json_w_ids):
     for block in structure_json_w_ids:
         if block["id"] == block_num:
             block["yaw"] += answer
             break
     return structure_json_w_ids
+
 
 def delete_block(block_num, structure_json_w_ids):
     for i, block in enumerate(structure_json_w_ids):

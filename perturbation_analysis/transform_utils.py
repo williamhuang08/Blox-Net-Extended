@@ -4,6 +4,7 @@ import math
 PI = np.pi
 EPS = np.finfo(float).eps * 4.0
 
+
 def mat2quat(rmat):
     # https://github.com/ARISE-Initiative/robosuite/blob/master/robosuite/utils/transform_utils.py
     """
@@ -74,6 +75,7 @@ def quat2mat(quaternion):
         ]
     )
 
+
 def angular_error(desired, current):
     rc1 = current[0:3, 0]
     rc2 = current[0:3, 1]
@@ -86,8 +88,18 @@ def angular_error(desired, current):
 
     return error
 
-def within_pos_rot_threshold(current_pos, current_quat, target_pos, target_quat, position_threshold=0.001, rotation_threshold=0.001):
+
+def within_pos_rot_threshold(
+    current_pos,
+    current_quat,
+    target_pos,
+    target_quat,
+    position_threshold=0.001,
+    rotation_threshold=0.001,
+):
     pos_err = np.linalg.norm(target_pos - current_pos)
-    rot_err = np.linalg.norm(angular_error(quat2mat(target_quat), quat2mat(current_quat)))
+    rot_err = np.linalg.norm(
+        angular_error(quat2mat(target_quat), quat2mat(current_quat))
+    )
 
     return pos_err < position_threshold and rot_err < rotation_threshold
