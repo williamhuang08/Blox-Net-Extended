@@ -1,5 +1,5 @@
 import os
-
+import argparse
 import dotenv
 from tqdm.contrib.concurrent import process_map
 
@@ -66,4 +66,10 @@ def main_run_pipeline_single_obj_parallel(to_build, num_structures=10):
 
 
 if __name__ == "__main__":
-    main_run_pipeline_single_obj_parallel(structure_name)
+    parser = argparse.ArgumentParser(description='Run pipeline for single object in parallel')
+    parser.add_argument('structure_name', type=str, help='Name of the structure to build')
+    parser.add_argument('--num-structures', type=int, default=10,
+                      help='Number of structures to generate (default: 10)')
+    
+    args = parser.parse_args()
+    main_run_pipeline_single_obj_parallel(args.structure_name, args.num_structures)

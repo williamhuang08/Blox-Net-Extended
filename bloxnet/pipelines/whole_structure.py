@@ -230,7 +230,7 @@ def stability_check(blocks, debug=False):
         last_block = blocks[i]
 
         x_img, y_img = get_imgs(
-            keys=["x", "y"], axes=True, labels=False, highlight_id=last_block.id
+            keys=["x", "y"], axes=False, labels=False, highlight_id=last_block.id
         )
 
         stable, pos_delta, rot_delta = structure.check_stability(
