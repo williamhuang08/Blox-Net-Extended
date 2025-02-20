@@ -4,6 +4,7 @@ Script which goes through all objects in gpt_caching by loading best_assembly/as
 import os
 from bloxnet.structure import Assembly
 
+
 def get_sorted_assemblies_by_rating(gpt_cache_dir):
     assemblies = []
     for subdir in os.listdir(gpt_cache_dir):
@@ -12,17 +13,18 @@ def get_sorted_assemblies_by_rating(gpt_cache_dir):
         if not os.path.isdir(subdir_path):
             continue
 
-        assembly_path = os.path.join(subdir_path, 'best_assembly', 'assembly.pkl')
-        
+        assembly_path = os.path.join(subdir_path, "best_assembly", "assembly.pkl")
+
         if not os.path.exists(assembly_path):
             print(f"{assembly_path} doen't exist, continuing")
             continue
 
         assembly = Assembly.load(assembly_path)
         assemblies.append(assembly)
-    
+
     sorted_assemblies = sorted(assemblies, key=lambda x: x.eval_rating, reverse=True)
     return sorted_assemblies
+
 
 if __name__ == "__main__":
     sorted_assemblies = get_sorted_assemblies_by_rating("gpt_caching")

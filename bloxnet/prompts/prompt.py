@@ -16,6 +16,7 @@ from PIL import Image
 def make_dalle_prompt(to_build: str) -> str:
     return f"""Create a simple 3D cartoon drawing of a {to_build}.  Only include one instance of a {to_build} in the image. Don't include a background, only show a {to_build}."""
 
+
 def get_dalle_img(dalle_prompt, dalle_img_path):
     if not os.path.exists(dalle_img_path):
         dalle_img = GPTClient.get_image_from_dalle(dalle_prompt, dalle_img_path)
@@ -24,7 +25,17 @@ def get_dalle_img(dalle_prompt, dalle_img_path):
         dalle_img = Image.open(dalle_img_path)
     return dalle_img
 
-def prompt_with_caching(messages_and_images, context, save_dir, name, cache=True, i=0, system_message=None, temeprature=0):
+
+def prompt_with_caching(
+    messages_and_images,
+    context,
+    save_dir,
+    name,
+    cache=True,
+    i=0,
+    system_message=None,
+    temeprature=0,
+):
     if type(messages_and_images) == str:
         messages_and_images = [messages_and_images]
 
@@ -46,9 +57,16 @@ def prompt_with_caching(messages_and_images, context, save_dir, name, cache=True
         context = load_from_json(context_path)
     else:
         if system_message:
-            response, context = GPTClient.prompt_gpt(messages_and_images, context=context, system_message=system_message, temperature=temeprature)
+            response, context = GPTClient.prompt_gpt(
+                messages_and_images,
+                context=context,
+                system_message=system_message,
+                temperature=temeprature,
+            )
         else:
-            response, context = GPTClient.prompt_gpt(messages_and_images, context=context, temperature=temeprature)
+            response, context = GPTClient.prompt_gpt(
+                messages_and_images, context=context, temperature=temeprature
+            )
 
     save_file(response, response_path)
     save_to_json(context, context_path)

@@ -41,6 +41,10 @@ To generate structures using Blox-Net's iterative physics-grounded prompting, ru
 
 - WARNING: The max_workers parameter in ```full_pipeline.py``` and ```run_pipeline_single_obj_parallel.py``` might need to be adjusted on low memory systems
 
+For example, to generate 15 designs of the `Bridge` structure with 10 workers, run
+```
+python scripts/run_pipeline_single_obj_parallel.py Bridge --num-structures 15 --num-workers 10
+```
 
 10 versions of each structure are generated; structures and all prompts are saved in ```gpt_caching/{structure_name}```, and the best assembly is selected by ChatGPT and saved in the ```best_assembly``` subdirectory. Inside each structure directory, PyBullet renders are saved and the subdirectories ```prompts```, ```responses```, and ```context``` include the VLM conversation history.
 

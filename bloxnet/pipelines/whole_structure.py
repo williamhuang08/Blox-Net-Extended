@@ -6,17 +6,24 @@ import pybullet as p
 import matplotlib.pyplot as plt
 from PIL import Image
 
-from bloxnet.utils.utils import get_last_json_as_dict, save_to_json, slugify, markdown_json
+from bloxnet.utils.utils import (
+    get_last_json_as_dict,
+    save_to_json,
+    slugify,
+    markdown_json,
+)
 from bloxnet.pybullet.pybullet_images import get_imgs
 from bloxnet.prompts.prompt import prompt_with_caching
 from bloxnet.structure import Structure, Block, Assembly
 
 SAVE_DIR = "gpt_caching"
 
+
 def make_description_prompt(to_build):
     return f"""
 I'm working on constructing a block tower that represents a(n) {to_build}. I need a concise, qualitative description of the design that captures its essence in a minimalistic style. The design should focus on simplicity, avoiding unnecessary complexity while still conveying the key features of a(n) {to_build}. The description should highlight the overall structure and proportions, emphasizing how the block arrangement reflects the object's shape and form. However the design shouldn't be too large, too wide, or too tall.
 """.strip()
+
 
 def make_plan_prompt(to_build, blockset, description):
     return [
@@ -50,7 +57,8 @@ Cones are always positioned with their flat side down and their pointed tip faci
 Decide a semantic name for the block for the role it represents in the structure. 
 Decide the colors of each block to look like a {to_build}. Color is an rgba array with values from 0 to 1.
 """
-]
+    ]
+
 
 def order_blocks_prompts(to_build):
     return f"""
@@ -60,6 +68,7 @@ Please describe the sequence in which the blocks should be placed to correctly f
 
 For each block, specify whether it will be placed on the ground or on top of another block. If a block will be supported by multiple blocks, mention all of them. Ensure that the blocks are placed in a way that they remain stable and won't topple over when the physics simulation is run. Blocks cannot hover without support.
 """.strip()
+
 
 def decide_positions_prompts(to_build):
     return f"""
@@ -104,7 +113,10 @@ Output a JSON following this format:
 )}
 """
 
-def get_stability_correction(to_build, unstable_block : Block , pos_delta, structure_json, x_img, y_img):
+
+def get_stability_correction(
+    to_build, unstable_block: Block, pos_delta, structure_json, x_img, y_img
+):
     return [
         f"""
 {markdown_json(structure_json)}
@@ -123,12 +135,11 @@ Here is an orthographic image of the side view of the structure with the y-axis 
 Here is an orthographic image of the side view of the structure with the x-axis pointing to the right and the z-axis pointing up. {unstable_block.gpt_name} is highlighted in red while the other blocks are colored in white.
 """,
         y_img,
-f"""
+        f"""
 Describe what you see in these images and use them to help inform your correction. Then, provide the ouptut JSON in the proper format.
-"""
+""",
     ]
-    
-    
+
 
 def get_structure_info(img):
     return [
@@ -140,8 +151,9 @@ After describing the image in detail and providing some initial thoughts, answer
 {
     markdown_json({"guesses": ["guess_1", "guess_2", "guess_3", "guess_4", "guess_5", "guess_6", "guess_7", "guess_8", "guess_9", "guess_10"]})
 }
-""".strip()
+""".strip(),
     ]
+
 
 def get_structure_rating(to_build):
     return f"""
@@ -163,66 +175,75 @@ def process_available_blocks(blocks):
         block_shape = block["shape"]
         block_dimensions = block["dimensions"]
         number_available = block["number_available"]
-        available_blocks.append({
-            "shape": block_shape,
-            "dimensions": block_dimensions,
-            "number_available": number_available
-        })
+        available_blocks.append(
+            {
+                "shape": block_shape,
+                "dimensions": block_dimensions,
+                "number_available": number_available,
+            }
+        )
     return available_blocks
 
+
 def blocks_from_json(json_data):
-    blocks=[]
+    blocks = []
     for block_data in json_data:
         if block_data["shape"] == "cuboid":
             dimensions = [
                 block_data["dimensions"]["x"],
                 block_data["dimensions"]["y"],
-                block_data["dimensions"]["z"]
+                block_data["dimensions"]["z"],
             ]
         elif block_data["shape"] == "cylinder" or block_data["shape"] == "cone":
             dimensions = [
                 block_data["dimensions"]["radius"],
-                block_data["dimensions"]["height"]
+                block_data["dimensions"]["height"],
             ]
         else:
             raise ValueError(f"Invalid shape {block_data['shape']}")
 
         block = Block(
-            id = 999, # id gets updated by place blocks call, otherwise it's unknown
-            gpt_name = block_data["name"],
-            block_name = "",
-            shape = block_data["shape"],
-            dimensions = dimensions,
-            position = [
+            id=999,  # id gets updated by place blocks call, otherwise it's unknown
+            gpt_name=block_data["name"],
+            block_name="",
+            shape=block_data["shape"],
+            dimensions=dimensions,
+            position=[
                 block_data["position"]["x"],
                 block_data["position"]["y"],
-                1*1000
+                1 * 1000,
             ],
-            orientation = p.getQuaternionFromEuler([0, 0, np.radians(block_data["yaw"])]),
-            color = block_data["color"]
+            orientation=p.getQuaternionFromEuler([0, 0, np.radians(block_data["yaw"])]),
+            color=block_data["color"],
         )
         blocks.append(block)
-    
+
     return blocks
+
 
 def stability_check(blocks, debug=False):
     for i in range(len(blocks)):
         structure = Structure()
-        structure.add_blocks(blocks[:i+1])
+        structure.add_blocks(blocks[: i + 1])
         structure.place_blocks()
 
         last_block = blocks[i]
 
-        x_img,y_img = get_imgs(keys=["x", "y"], axes=True, labels=False, highlight_id=last_block.id)
+        x_img, y_img = get_imgs(
+            keys=["x", "y"], axes=False, labels=False, highlight_id=last_block.id
+        )
 
-        stable, pos_delta, rot_delta = structure.check_stability(blocks[i].id, debug=debug)
+        stable, pos_delta, rot_delta = structure.check_stability(
+            blocks[i].id, debug=debug
+        )
 
         pos_delta = 1000 * np.array(pos_delta)
 
         if not stable:
             return False, last_block, pos_delta, x_img, y_img
-        
+
     return True, None, None, x_img, y_img
+
 
 def get_system_message():
     return f"""
@@ -234,8 +255,10 @@ Cylinders are always upright with the z-axis as the height and the radius is the
 
 Don't make structures which are too complex or try to show fine detail. Instead, focus on showing the broader structure.
 """.strip()
-    
-TEMPERATURE=.5
+
+
+TEMPERATURE = 0.5
+
 
 def generate_structure(to_build, available_blocks, iter=0):
     # make directory to save structure
@@ -248,22 +271,54 @@ def generate_structure(to_build, available_blocks, iter=0):
 
     # make description
     prompt = make_description_prompt(to_build)
-    response, _ = prompt_with_caching(prompt, [], structure_dir, "description", cache=True, temeprature=TEMPERATURE, i=iter)
+    response, _ = prompt_with_caching(
+        prompt,
+        [],
+        structure_dir,
+        "description",
+        cache=True,
+        temeprature=TEMPERATURE,
+        i=iter,
+    )
     print(response)
 
     # # make plan
     prompt = make_plan_prompt(to_build, available_blocks, response)
-    response, main_context = prompt_with_caching(prompt, [], structure_dir, "main_plan", cache=True, temeprature=TEMPERATURE, i=iter)
+    response, main_context = prompt_with_caching(
+        prompt,
+        [],
+        structure_dir,
+        "main_plan",
+        cache=True,
+        temeprature=TEMPERATURE,
+        i=iter,
+    )
     print(response)
-    
+
     # decide ordering of blocks
     prompt = order_blocks_prompts(to_build)
-    response, main_context = prompt_with_caching(prompt, main_context, structure_dir, "order_plan", cache=True, temeprature=TEMPERATURE, i=iter)
+    response, main_context = prompt_with_caching(
+        prompt,
+        main_context,
+        structure_dir,
+        "order_plan",
+        cache=True,
+        temeprature=TEMPERATURE,
+        i=iter,
+    )
     print(response)
 
     # decide positions
     prompt = decide_positions_prompts(to_build)
-    response, main_context = prompt_with_caching(prompt, main_context, structure_dir, "positions_plan", cache=True, temeprature=TEMPERATURE, i=iter)
+    response, main_context = prompt_with_caching(
+        prompt,
+        main_context,
+        structure_dir,
+        "positions_plan",
+        cache=True,
+        temeprature=TEMPERATURE,
+        i=iter,
+    )
     print(response)
 
     json_output = get_last_json_as_dict(response)
@@ -280,14 +335,20 @@ def generate_structure(to_build, available_blocks, iter=0):
 
     for i in range(2):
 
-        stable, unstable_block, pos_delta, x_img, y_img = stability_check(blocks, debug=True)
+        stable, unstable_block, pos_delta, x_img, y_img = stability_check(
+            blocks, debug=True
+        )
 
         if stable:
             break
 
-        prompt = get_stability_correction(to_build, unstable_block, pos_delta, json_output, x_img, y_img)
-        response, stability_context = prompt_with_caching(prompt, [], structure_dir, f"stability_correction_{iter}", cache=True, i=i)
-        
+        prompt = get_stability_correction(
+            to_build, unstable_block, pos_delta, json_output, x_img, y_img
+        )
+        response, stability_context = prompt_with_caching(
+            prompt, [], structure_dir, f"stability_correction_{iter}", cache=True, i=i
+        )
+
         json_output = get_last_json_as_dict(response)
         blocks = blocks_from_json(json_output)
 
@@ -296,18 +357,19 @@ def generate_structure(to_build, available_blocks, iter=0):
         structure.place_blocks()
         isometric_img = get_imgs(keys=["isometric"], axes=True, labels=False)
         img = Image.fromarray(isometric_img)
-        img.save(f"{structure_dir}/{to_build_slug}_stability_corrrection_{iter}_{i}.png")
+        img.save(
+            f"{structure_dir}/{to_build_slug}_stability_corrrection_{iter}_{i}.png"
+        )
 
     assembly = Assembly(
-        structure = structure,
-        structure_directory = structure_dir,
-        to_build = to_build,
-        isometric_image = img,
-        available_blocks_json = available_blocks,
-        assembly_num = iter,
-        eval_rating = None,
-        eval_guesses = None
+        structure=structure,
+        structure_directory=structure_dir,
+        to_build=to_build,
+        isometric_image=img,
+        available_blocks_json=available_blocks,
+        assembly_num=iter,
+        eval_rating=None,
+        eval_guesses=None,
     )
     assembly.save_to_structure_dir()
     return assembly
-

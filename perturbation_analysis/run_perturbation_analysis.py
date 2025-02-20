@@ -6,16 +6,18 @@ from perturbation_analysis.perturbation_utils import needs_perturbation
 from PIL import Image
 from bloxnet.pybullet.pybullet_images import get_imgs
 
+
 def _setup_scene():
-    if not p.isConnected ():
+    if not p.isConnected():
         p.connect(p.DIRECT)
-    
+
     p.setAdditionalSearchPath(pybullet_data.getDataPath())
     p.resetSimulation()
-    plane = p.loadURDF("plane.urdf") # Load plane (ground)
+    plane = p.loadURDF("plane.urdf")  # Load plane (ground)
     p.setGravity(0, 0, -9.81)
 
-def run_perturbation_analysis(assembly):    
+
+def run_perturbation_analysis(assembly):
     """
     Steps to follow:
     1. Figure out which blocks are aligned --> circular and rectangular edges/faces
@@ -31,7 +33,9 @@ def run_perturbation_analysis(assembly):
         for block in assembly.structure.structure:
             if needs_perturbation(block, assembly):
                 print(block)
-                assembly = run_monte_carlo(block, assembly, num_circles=4, num_points_per_circle=8)
+                assembly = run_monte_carlo(
+                    block, assembly, num_circles=4, num_points_per_circle=8
+                )
             else:
                 pass
 
@@ -41,6 +45,7 @@ def run_perturbation_analysis(assembly):
     assembly.pre_perturbation_image = assembly.isometric_image
     assembly.isometric_image = final_img
     return assembly
+
 
 if __name__ == "__main__":
     assembly = Assembly.load("gpt_caching/rook-chess-piece/best_assembly/assembly.pkl")
