@@ -130,7 +130,6 @@ def get_best_assembly(assemblies: List[Assembly], use_rating=True, use_stability
             print("WARNING: No stable assembly generated")
             print("Returning best assembly ignoring stability")
             print("-------------------------------------")
-            return None
         else:
             assemblies = filtered_assemblies
 
