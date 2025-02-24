@@ -74,7 +74,6 @@ def select(to_build, image_ls, structure_dir, cur_iteration=0):
                 winner = (img1, idx1)
             else:
                 winner = compare_function(img1, img2)
-                print(winner)
                 # Preserve the index of the winning image
                 winner = (
                     (image_ls[idx1], idx1) if winner == 0 else (image_ls[idx2], idx2)
