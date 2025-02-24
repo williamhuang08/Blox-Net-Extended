@@ -12,18 +12,18 @@
 # Setup
 
 ## Installation
-- Create a conda environment with ```conda create -n bloxnet -y python=3.10```
-
-- Activate the conda environment with ```conda activate bloxnet```
-
-- Clone this repository with ```git clone https://github.com/Apgoldberg1/blox-net-coderelease.git```
-
-- Install Blox-Net and required dependencies with ```pip install -e .```
+```
+conda create -n bloxnet -y python=3.10
+conda activate bloxnet
+git clone https://github.com/Apgoldberg1/blox-net-coderelease.git
+cd blox-net-coderelease
+pip install -e .
+```
 
 - If you would like to render the generated structures using ```scripts/pretty_visualize.py```, you will also have to install PyVista with the command ```pip install pyvista```
 
 ## OpenAI API Key
-To call GPT, create a ```.env``` file in the home directory of the repository and include ```OPENAI_API_KEY=[your api key]```
+Blox-Net uses the ChatGPT API, create a ```.env``` file in the home directory of the repository and include ```OPENAI_API_KEY=[your api key]```
 
 
 # Running Blox-Net
@@ -31,13 +31,13 @@ To call GPT, create a ```.env``` file in the home directory of the repository an
 ## Repository Structure
 - ```scripts```: runnable files for generating and rendering structures
 
-- ```perturbation_analysis```: the implementation of the perturbation redesign pipeline, as discussed in the paper.
-
 - ```bloxnet```: Core code for design generation. Queries ChatGPT and simulates block placements.
+
+- ```perturbation_analysis```: the implementation of the perturbation redesign pipeline, as discussed in the paper.
 
 
 ## Generating Structures
-To generate structures using Blox-Net's iterative physics-grounded prompting, run ```python scripts/full_pipeline.py``` after adjusting the ```structure_names``` list.
+To generate structures using Blox-Net's iterative prompting, run ```python scripts/full_pipeline.py```. The structures in the ```structure_names``` list will be generated.
 
 - WARNING: The max_workers parameter in ```full_pipeline.py``` and ```run_pipeline_single_obj_parallel.py``` might need to be adjusted on low memory systems
 
