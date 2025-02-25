@@ -23,7 +23,7 @@ pip install -e .
 - If you would like to render the generated structures using ```scripts/pretty_visualize.py```, you will also have to install PyVista with the command ```pip install pyvista```
 
 ## OpenAI API Key
-Blox-Net uses the ChatGPT API, create a file titled ```.env``` in the home directory of the repository and include ```OPENAI_API_KEY=[your api key]```
+Blox-Net uses the ChatGPT API, create a file named ```.env``` in the home directory of the repository and include ```OPENAI_API_KEY=[your api key]```
 
 
 # Running Blox-Net
