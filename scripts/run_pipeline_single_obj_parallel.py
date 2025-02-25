@@ -34,7 +34,7 @@ def make_pybullet(x):
     return assembly
 
 
-def main_run_pipeline_single_obj_parallel(to_build, num_structures=10, max_workers=3):
+def main_run_pipeline_single_obj_parallel(to_build, num_structures=10, max_workers=10):
     # Ensure this is only run in the main process
     assemblies = process_map(
         make_pybullet,
@@ -68,8 +68,9 @@ def main_run_pipeline_single_obj_parallel(to_build, num_structures=10, max_worke
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run pipeline for single object in parallel')
     parser.add_argument('structure_name', type=str, help='Name of the structure to build')
-    parser.add_argument('--num-structures', type=int, default=10,
+    parser.add_argument('--num_structures', type=int, default=10,
                       help='Number of structures to generate (default: 10)')
-    parser.add_argument('--num-workers', type=int, default=10) 
+    parser.add_argument('--num_workers', type=int, default=10,
+                        help='Number of workers for parallel generation (default: 10)') 
     args = parser.parse_args()
     main_run_pipeline_single_obj_parallel(args.structure_name, args.num_structures, args.num_workers)
