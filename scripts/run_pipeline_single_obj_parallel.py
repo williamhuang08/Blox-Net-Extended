@@ -36,6 +36,8 @@ def make_pybullet(x):
 
 def main_run_pipeline_single_obj_parallel(to_build, num_structures=10, max_workers=10):
     # Ensure this is only run in the main process
+    assert max_workers>0, 'max workers must be greater than 0'
+    
     assemblies = process_map(
         make_pybullet,
         zip([to_build] * num_structures, range(num_structures)),
