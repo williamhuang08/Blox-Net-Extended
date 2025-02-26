@@ -43,7 +43,7 @@ To generate structures using Blox-Net's iterative prompting, run ```python scrip
 
 For example, to generate 15 designs of the `Bridge` structure with 10 workers, run
 ```
-python scripts/run_pipeline_single_obj_parallel.py 'Bridge' --num_structures 15 --num_workers 10
+python3 scripts/run_pipeline_single_obj_parallel.py 'Bridge' --num_structures 15 --num_workers 10
 ```
 
 10 versions of each structure are generated; structures and all prompts are saved in ```gpt_caching/{structure_name}```, and the best assembly is selected by ChatGPT and saved in the ```best_assembly``` subdirectory. Inside each structure directory, PyBullet renders are saved and the subdirectories ```prompts```, ```responses```, and ```context``` include the VLM conversation history.
