@@ -358,7 +358,7 @@ def generate_structure(to_build, available_blocks, iter=0):
         isometric_img = get_imgs(keys=["isometric"], axes=True, labels=False)
         img = Image.fromarray(isometric_img)
         img.save(
-            f"{structure_dir}/{to_build_slug}_stability_corrrection_{iter}_{i}.png"
+            f"{structure_dir}/{to_build_slug}_stability_correction_{iter}_{i}.png"
         )
 
     assembly = Assembly(
