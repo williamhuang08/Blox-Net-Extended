@@ -20,8 +20,8 @@ cd blox-net-coderelease
 pip install -e .
 ```
 
-- If you would like to render the generated structures using ```scripts/pretty_visualize.py```, you will also have to install PyVista with the command ```pip install pyvista```
-
+- Optionally, ```pip install pyvista``` to render generated structures using ```scripts/pretty_visualize.py```
+  
 ## OpenAI API Key
 Blox-Net uses the ChatGPT [OpenAI API](https://platform.openai.com/docs/quickstart#create-and-export-an-api-key), create a file named ```.env``` in the root directory of the repository and include ```OPENAI_API_KEY=[your api key]```
 
