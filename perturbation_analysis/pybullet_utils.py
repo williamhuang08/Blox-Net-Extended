@@ -8,6 +8,7 @@ from bloxnet.structure.structure import (
     _create_cuboid,
     _create_cylinder,
     create_block,
+    _create_pyramid,
 )
 import os
 
@@ -38,6 +39,8 @@ def load_blocks(block_properties):
             block_id = _create_cylinder(block)
         elif block.shape == "cone":
             block_id = _create_cone(block)
+        elif block.shape == "pyramid":
+            block_id = _create_pyramid(block)
 
         new_block_properties.append(block)
 

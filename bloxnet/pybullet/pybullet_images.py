@@ -337,6 +337,7 @@ if __name__ == "__main__":
         create_cuboid,
         init_pybullet,
         create_cylinder,
+        create_pyramid,
     )
     from bloxnet.structure.structure import _create_cone, Block
 
@@ -351,6 +352,7 @@ if __name__ == "__main__":
 
     create_cuboid("cuboid", [50, 50, 50], [0, 0, 25], 0, [0.5, 0.5, 0.5, 1])
     create_cylinder("cylinder", 25, 50, [75, 0, 25], [0.5, 0.5, 0.5, 1])
+    create_pyramid("pyramid", [50, 50], 50, [-75, 0, 25], 0, [0.5, 0.5, 0.5, 1])
     _create_cone(
         Block(
             999,

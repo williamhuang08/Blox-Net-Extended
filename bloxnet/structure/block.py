@@ -20,8 +20,8 @@ class Block:
     ) -> None:
         assert len(color) == 4, "color is not length 4"
         assert (
-            shape == "cuboid" or shape == "cylinder" or shape == "cone"
-        ), f"shape must be cuboid or cylinder or cone: {shape}"
+            shape == "cuboid" or shape == "cylinder" or shape == "cone" or shape == "pyramid"
+        ), f"shape must be cuboid or cylinder or cone or pyramid: {shape}"
         if shape == "cuboid":
             assert (
                 len(dimensions) == 3
@@ -30,6 +30,10 @@ class Block:
             assert (
                 len(dimensions) == 2
             ), f"dimensions for cylinder not length 2: {dimensions}"
+        elif shape == "pyramid":
+            assert (
+                len(dimensions) == 3
+            ), f"dimensions for pyramid not length 3: {dimensions}"
         assert (
             len(orientation) == 4 or len(orientation) == 3
         ), f"orientation must be length 4 quaternion or length 3 euler angles: {orientation}"

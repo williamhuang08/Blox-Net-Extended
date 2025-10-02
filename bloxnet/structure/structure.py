@@ -1,3 +1,4 @@
+import tempfile
 import numpy as np
 from bloxnet.utils.transform_utils import quat2mat, angular_error
 from bloxnet.structure import Block
@@ -141,6 +142,8 @@ def create_block(block):
         return _create_cylinder(block)
     elif block.shape == "cone":
         return _create_cone(block)
+    elif block.shape == "pyramid":
+        return _create_pyramid(block)
     else:
         raise ValueError(f"Shape {block.shape} not supported")
 
@@ -252,6 +255,98 @@ def _create_cone(block, lateral_friction=0.5, spinning_friction=0.2):
     return id
 
 
+def _create_pyramid(block, lateral_friction=0.5, spinning_friction=0.2):
+    """
+    Pyramid with rectangular/square base.
+    Accepts dimensions as [base_mm, height_mm]  OR [L_mm, W_mm, H_mm].
+    Position is the centroid; orientation is a quaternion.
+    """
+    dims = block.dimensions
+    if len(dims) == 2:
+        L_mm, W_mm, H_mm = dims[0], dims[0], dims[1]
+    elif len(dims) == 3:
+        L_mm, W_mm, H_mm = dims
+    else:
+        raise ValueError("pyramid dimensions must be [base, height] or [L, W, H] (mm)")
+    if H_mm <= 0 or L_mm <= 0 or W_mm <= 0:
+        raise ValueError("pyramid dimensions must be positive")
+
+    # Units
+    L, W, H = L_mm/1000.0, W_mm/1000.0, H_mm/1000.0
+    position_m = [x/1000.0 for x in block.position]
+    orientation = block.orientation
+    color = block.color
+
+    # Mass (uniform density)
+    density = 1000.0  # kg/m^3
+    mass = density * (L * W * H) / 3.0
+
+    # Local-frame verts around the centroid (centroid is H/4 above base)
+    z_base = -H/4.0
+    z_apex = +3.0*H/4.0
+    verts = np.array([
+        [ +L/2.0, +W/2.0, z_base ],  # 0
+        [ +L/2.0, -W/2.0, z_base ],  # 1
+        [ -L/2.0, -W/2.0, z_base ],  # 2
+        [ -L/2.0, +W/2.0, z_base ],  # 3
+        [  0.0,     0.0,  z_apex ],  # 4 apex
+    ], dtype=np.float64)
+
+    faces = [
+        [0, 2, 1], [0, 3, 2],      # base
+        [0, 4, 1], [1, 4, 2],      # sides
+        [2, 4, 3], [3, 4, 0],
+    ]
+
+    # ---- Write a tiny OBJ (portable across PyBullet versions)
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".obj", delete=False) as f:
+        obj_path = f.name
+        for v in verts:
+            f.write(f"v {v[0]} {v[1]} {v[2]}\n")
+        for tri in faces:
+            # OBJ is 1-based
+            f.write(f"f {tri[0]+1} {tri[1]+1} {tri[2]+1}\n")
+
+    # ---- Collision: force convex from the OBJ (works for dynamic bodies)
+    flags = getattr(p, "GEOM_FORCE_CONVEX", 0)
+    col_id = p.createCollisionShape(
+        shapeType=p.GEOM_MESH,
+        fileName=obj_path,
+        meshScale=[1.0, 1.0, 1.0],
+        flags=flags
+    )
+
+    # ---- Visual: same OBJ
+    vis_id = p.createVisualShape(
+        shapeType=p.GEOM_MESH,
+        fileName=obj_path,
+        meshScale=[1.0, 1.0, 1.0],
+        rgbaColor=color
+    )
+
+    body_id = p.createMultiBody(
+        baseMass=mass,
+        baseCollisionShapeIndex=col_id,
+        baseVisualShapeIndex=vis_id,
+        basePosition=position_m,
+        baseOrientation=orientation,
+    )
+
+    # Show both sides in the GUI (some builds cull back faces)
+    if hasattr(p, "VISUAL_SHAPE_DOUBLE_SIDED"):
+        p.changeVisualShape(body_id, -1, flags=p.VISUAL_SHAPE_DOUBLE_SIDED)
+
+    p.changeDynamics(
+        body_id, -1,
+        lateralFriction=lateral_friction,
+        spinningFriction=spinning_friction
+    )
+    return body_id
+
+
+
+
+
 def test_with_gui():
     if not p.isConnected():
         p.connect(p.GUI)
@@ -283,17 +378,28 @@ def test_with_gui():
         block_name="block3",
         gpt_name="box",
         shape="cone",
-        dimensions=[100, 500],
+        dimensions=[500, 500],
         position=[0, 0, 250],
         orientation=[0, 0, 0, 1],
         color=[1.0, 0, 0, 1.0],
     )
 
-    structure.add_block(block1)
-    structure.place_blocks()
-    structure.add_block(block2)
-    structure.place_blocks()
-    structure.add_block(block3)
+    block4 = Block(
+        id=4, block_name="block4", gpt_name="box",
+        shape="pyramid",
+        dimensions=[400, 400, 200],   # rectangular base, 400x400 mm, 200 mm tall
+        position=[0, 0, 290],         # base on top of block2: 240 + 500/4
+        orientation=[0, 0, 0, 1],
+        color=[1.0, 0, 0, 1.0],
+    )
+
+    # structure.add_block(block1)
+    # # structure.place_blocks()
+    # structure.add_block(block2)
+    # structure.place_blocks()
+    # structure.add_block(block3)
+    # structure.place_blocks()
+    structure.add_block(block4)
     structure.place_blocks()
     # print(structure.check_stability(2))
 

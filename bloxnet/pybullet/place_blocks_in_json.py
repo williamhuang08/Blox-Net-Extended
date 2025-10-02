@@ -1,3 +1,4 @@
+import tempfile
 import pybullet as p
 import pybullet_data
 import time
@@ -16,6 +17,79 @@ def init_pybullet(gui=False):
 
     # Set additional search path for PyBullet data
     p.setAdditionalSearchPath(pybullet_data.getDataPath())
+
+def create_pyramid(name, base_dimensions, height, position, yaw_angle, color=[1, 0, 0, 1]):
+    """
+    Create a right pyramid (rectangular base) in PyBullet.
+
+    Parameters:
+    - name: str (unused, for symmetry)
+    - base_dimensions: [L_mm, W_mm] base side lengths in millimeters
+    - height: H_mm, apex height above base in millimeters
+    - position: [x_mm, y_mm, z_mm] of the *centroid* (not base)
+    - yaw_angle: degrees about +Z
+    - color: [r,g,b,a]
+    Notes:
+    - For a uniform pyramid, the centroid is at H/4 above the base plane.
+      So if you want the base at z = z0 (mm), pass position[2] = z0 + H/4.
+    """
+
+    # --- Units
+    L_m = base_dimensions[0] / 1000.0
+    W_m = base_dimensions[1] / 1000.0
+    H_m = height             / 1000.0
+    position_m = [x / 1000.0 for x in position]
+    orientation = p.getQuaternionFromEuler([0.0, 0.0, np.radians(yaw_angle)])
+
+    # --- Mass: V = (L*W*H)/3
+    density = 1000.0  # kg/m^3
+    volume  = (L_m * W_m * H_m) / 3.0
+    mass    = density * volume
+
+    # --- Vertices in local frame with origin at centroid
+    # Base plane z = -H/4, apex z = +3H/4
+    z_base = -H_m / 4.0
+    z_apex = +3.0 * H_m / 4.0
+    verts = np.array([
+        [ +L_m/2.0, +W_m/2.0, z_base ],  
+        [ +L_m/2.0, -W_m/2.0, z_base ],  
+        [ -L_m/2.0, -W_m/2.0, z_base ],  
+        [ -L_m/2.0, +W_m/2.0, z_base ],  
+        [  0.0,       0.0,     z_apex ],
+    ], dtype=np.float64)
+
+    faces = [
+        [0, 1, 2], [0, 2, 3], 
+        [0, 1, 4], [1, 2, 4],
+        [2, 3, 4], [3, 0, 4],
+    ]
+
+    col_id = p.createCollisionShape(
+        shapeType=p.GEOM_CONVEX_HULL,
+        vertices=verts.tolist()
+    )
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".obj", delete=False) as f:
+        obj_path = f.name
+        for v in verts:
+            f.write(f"v {v[0]} {v[1]} {v[2]}\n")
+        for tri in faces:
+            f.write(f"f {tri[0]+1} {tri[1]+1} {tri[2]+1}\n")
+
+    vis_id = p.createVisualShape(
+        shapeType=p.GEOM_MESH,
+        fileName=obj_path,
+        rgbaColor=color
+    )
+
+    body_id = p.createMultiBody(
+        baseMass=mass,
+        baseCollisionShapeIndex=col_id,
+        baseVisualShapeIndex=vis_id,
+        basePosition=position_m,
+        baseOrientation=orientation,
+    )
+    return body_id
 
 
 def create_cuboid(name, dimensions, position, yaw_angle, color=[1, 0, 0, 1]):
@@ -185,6 +259,13 @@ def place_blocks(blocks, blockset):
             height = blockset[block["name"]]["dimensions"]["height"]
 
             id = create_cylinder(block["name"], radius, height, position, [1, 0, 0, 1])
+        elif block_type == "pyramid":
+            base_dimensions = [
+                blockset[block["name"]]["dimensions"]["x"],
+                blockset[block["name"]]["dimensions"]["y"],
+            ]
+            height = blockset[block["name"]]["dimensions"]["height"]
+            id = create_pyramid(block["name"], base_dimensions, height, position, yaw_angle, [1, 0, 0, 1])
 
         # Move the block until it makes contact with another object
         move_until_contact(id, direction=[0, 0, -1], step_size=0.001, debug=True)

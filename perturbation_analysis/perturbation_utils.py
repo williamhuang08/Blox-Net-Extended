@@ -1,6 +1,88 @@
 import numpy as np
 import pybullet as p
 
+def _combined_friction(mu_a, mu_b, rule="min"):
+    if rule == "min":
+        return min(mu_a, mu_b)
+    elif rule == "geom":
+        return float(np.sqrt(mu_a * mu_b))
+    else:  # conservative default
+        return min(mu_a, mu_b)
+
+def _body_friction(body_id):
+    try:
+        di = p.getDynamicsInfo(body_id, -1)
+        # tuple: (mass, lateralFriction, rollingFriction, spinningFriction, ...
+        mu = di[1] if di and di[1] is not None else 0.5
+        return float(mu)
+    except Exception:
+        return 0.5
+
+def will_slide_off_pyramid_face(block, assembly, nz_base_thr=0.985, rule="min", margin_eps=0.0):
+    """
+    Returns (True/False, details) — True if any contact with a pyramid face is predicted to slip.
+    - nz_base_thr ~ 0.985 marks ~10° tilt as 'base-like'; above this we treat as flat base.
+    - rule: 'min' (conservative) or 'geom' (geometric mean) for friction combine.
+    - margin_eps: require mu_eff - tan(theta) >= margin_eps to consider 'safe'.
+    """
+    # Ensure bodies are placed and contacts are up-to-date
+    assembly.structure.place_blocks(drop=False)
+
+    this_id = block.id
+    if this_id is None or this_id < 0:
+        return False, {}
+
+    # friction for this block
+    mu_a = _body_friction(this_id)
+
+    # Scan contacts with all other bodies
+    for other in assembly.structure.structure:
+        if other.id == this_id:
+            continue
+        if getattr(other, 'shape', None) != 'pyramid':
+            continue
+
+        mu_b = _body_friction(other.id)
+        mu_eff = _combined_friction(mu_a, mu_b, rule=rule)
+
+        # Check all contact points between (block, pyramid)
+        cps = p.getContactPoints(this_id, other.id)
+        for cp in cps:
+            # In many pybullet builds:
+            # cp[7] = contactNormalOnB (world), pointing from B towards A
+            # cp[8] = contact distance (<=0 at contact)
+            try:
+                nBx, nBy, nBz = cp[7]
+            except Exception:
+                # Fallback: some builds store it differently; skip if missing
+                continue
+
+            # If |nBz| ~ 1 -> normal nearly vertical => plane nearly horizontal => base contact (not slipping case)
+            nz = abs(float(nBz))
+            if nz >= nz_base_thr:
+                # near-horizontal face: treat as base; no slope-induced sliding
+                continue
+
+            # Slope angle theta (plane tilt from horizontal) equals angle between normal and +Z
+            # alpha = arccos(nz) in [0, pi/2]; slope theta = alpha
+            theta = float(np.arccos(np.clip(nz, -1.0, 1.0)))
+
+            # No-slip condition on an incline: mu_eff >= tan(theta)
+            slip_margin = mu_eff - np.tan(theta)
+            if slip_margin < margin_eps:
+                details = {
+                    "other_pyramid_id": other.id,
+                    "mu_eff": mu_eff,
+                    "theta_deg": np.degrees(theta),
+                    "tan_theta": np.tan(theta),
+                    "slip_margin": slip_margin,
+                    "contact_normal_world_onB": (nBx, nBy, nBz),
+                }
+                return True, details
+
+    return False, {}
+
+
 
 def get_block_stability(block, assembly):
     return assembly.structure.check_stability(block.id, place_all_blocks=False)[0]
@@ -58,7 +140,12 @@ def check_block_status(block, assembly, verbose=False):
     stable = get_block_stability(block, assembly)
     near_collision = check_near_collision(block, assembly)
 
-    return stable and (not near_collision)
+    will_slide, slip_info = will_slide_off_pyramid_face(block, assembly, nz_base_thr=0.985, rule="min", margin_eps=0.0)
+
+    if verbose and will_slide:
+        print("[SLIP WARNING]", slip_info)
+
+    return stable and (not near_collision) and (not will_slide)
 
 
 def circle_sample(radius, num_points, center):
@@ -71,6 +158,9 @@ def circle_sample(radius, num_points, center):
 
 
 def needs_perturbation(block, assembly):
+    slipping, _ = will_slide_off_pyramid_face(block, assembly)
+    if slipping:
+        return True
     def _near_instability(
         block,
         assembly,

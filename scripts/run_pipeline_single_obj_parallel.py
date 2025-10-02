@@ -1,6 +1,6 @@
 import os
 import argparse
-import dotenv
+from dotenv import load_dotenv
 from tqdm.contrib.concurrent import process_map
 
 from bloxnet.pipelines.bracket_selection import get_best_assembly
@@ -17,7 +17,7 @@ structure_name = "Bridge"
 
 def make_pybullet(x):
     to_build, num_structures = x
-    dotenv.load_dotenv()
+    load_dotenv()
     blockset = "blocksets/printed_blocks.json"
     blockset = load_from_json(blockset)
 

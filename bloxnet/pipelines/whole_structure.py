@@ -54,6 +54,8 @@ Cylinders are always positioned "upright," with the flat sides parallel to the g
 
 Cones are always positioned with their flat side down and their pointed tip facing upwards. This means the base of the cone lies parallel to the ground plane, with the cone's height extending along the z-axis and the radius along the x and y axes.
 
+Pyramids have a flat base and a pointed apex. They should be placed with the base down and apex up for stability unless specifically used as caps. Avoid placing other blocks directly on the apex; place on the flat base or along large faces with enough support.
+
 Decide a semantic name for the block for the role it represents in the structure. 
 Decide the colors of each block to look like a {to_build}. Color is an rgba array with values from 0 to 1.
 """
@@ -64,7 +66,8 @@ def order_blocks_prompts(to_build):
     return f"""
 Given the blocks described in the plan, I will place and stack these blocks one at a time by lowering them from a very tall height.
 
-Please describe the sequence in which the blocks should be placed to correctly form a {to_build} structure. This means that blocks at the bottom should be placed first, followed by the higher blocks, so that the upper blocks can be stacked on top of the lower ones. Also note that it is difficult to stack blocks on top of a cone, so avoid placing blocks directly on top of cones.
+Please describe the sequence in which the blocks should be placed to correctly form a {to_build} structure. This means that blocks at the bottom should be placed first, followed by the higher blocks, so that the upper blocks can be stacked on top of the lower ones. Also note that it is difficult to stack blocks on top of a cone, so avoid placing blocks directly on top of cones. Also avoid placing blocks directly on a pyramid's apex; if stacking on a pyramid, use a flat cap (e.g., a small cuboid) or place along a sufficiently supported, gentle face.
+
 
 For each block, specify whether it will be placed on the ground or on top of another block. If a block will be supported by multiple blocks, mention all of them. Ensure that the blocks are placed in a way that they remain stable and won't topple over when the physics simulation is run. Blocks cannot hover without support.
 """.strip()
@@ -105,6 +108,14 @@ Output a JSON following this format:
             "name": "deck",
             "shape": "cuboid",
             "dimensions": {"x": 100, "y": 50, "z": 20},
+            "color": [0.5, 0.5, 0.5, 1],
+            "position": {"x": 0, "y": 0},
+            "yaw": 45,
+        },
+        {
+            "name": "roof",
+            "shape": "pyramid",
+            "dimensions": {"base": 100, "height": 50},
             "color": [0.5, 0.5, 0.5, 1],
             "position": {"x": 0, "y": 0},
             "yaw": 45,
@@ -199,6 +210,17 @@ def blocks_from_json(json_data):
                 block_data["dimensions"]["radius"],
                 block_data["dimensions"]["height"],
             ]
+        elif block_data["shape"] == "pyramid":
+            # Accept either square or rectangular base
+            if "base" in block_data["dimensions"] and "height" in block_data["dimensions"]:
+                base = block_data["dimensions"]["base"]
+                height = block_data["dimensions"]["height"]
+                dimensions = [base, base, height]          # [L, W, H]
+            else:
+                raise ValueError(
+                    "pyramid dimensions must be {'base', 'height'} "
+                    "or {'length','width','height'} (mm)"
+                )
         else:
             raise ValueError(f"Invalid shape {block_data['shape']}")
 
@@ -252,6 +274,8 @@ You are an expert in creating block constructions with experience building many 
 Cuboid dimensions x, y, z define the size of the block, but you can swap them around to adjust the block's orientation. For example, if a block needs to be placed "vertically" then it's longest axis should be the z-axis. So, if a block is listed as having dimensions {{x: 50, y: 10, z: 10}} you can instead write the dimensions as {{x: 10, y: 10, z: 50}} listing z as the longest axis. It can also be important to pay attention to switching x and y to conform with the rest of your structure.
 
 Cylinders are always upright with the z-axis as the height and the radius is the same along the x and y axes. 
+
+Pyramids are placed with their flat base on the ground (or on another flat surface) and the apex pointing upward. Do not place blocks on the apex tip; use a flat cap or rest on broad faces with adequate support.
 
 Don't make structures which are too complex or try to show fine detail. Instead, focus on showing the broader structure.
 """.strip()

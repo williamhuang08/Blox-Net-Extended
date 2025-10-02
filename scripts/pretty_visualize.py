@@ -44,6 +44,20 @@ def save_visual(blocks, save_path):
                 center=(0, 0, height / 2),
                 resolution=100,
             )
+        elif block["shape"] == "pyramid":
+            base = dim["base_length"]      # side length of the square base
+            h = dim["height"]              # height (apex above the base plane)
+            s = base / 2.0                 # half side
+
+            # CCW base quad (z=0), then apex
+            p0 = ( +s, +s, 0.0)
+            p1 = ( -s, +s, 0.0)
+            p2 = ( -s, -s, 0.0)
+            p3 = ( +s, -s, 0.0)
+            apex = (0.0, 0.0, h)
+
+            mesh = pv.Pyramid([p0, p1, p2, p3, apex])
+
         else:
             raise ValueError(f"Block type {block['type']} not supported")
 
