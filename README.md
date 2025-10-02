@@ -1,4 +1,4 @@
-In this project, I explore an extension of Blox-Net. [anchor text](https://ieeexplore.ieee.org/document/11127489)
+In this project, I explore an extension of [Blox-Net](https://ieeexplore.ieee.org/document/11127489)
 
 ```
 @inproceedings{goldberg2025bloxnet,
