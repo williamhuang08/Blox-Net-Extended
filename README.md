@@ -18,6 +18,6 @@ Next, I added 3 additional types of pyramids to the available set of blocks (bas
 
 From my preliminary findings, it seems that the addition of more geometric primitives to Blox-Net's available block set yields more recognizable designs for objects that would intuitively benefit from pyramids and does not negatively impact objects that don't. I also hypothesize that the added geometric complexity of additional primitives may affect the 99.2% block placement accuracy that Blox-Net currently achieves. A more abstract idea that I had to extend this direction is to formalize the GDfRA system mathematically using group theory. Specifically, we can represent each primitive as an object in a group action and then model the design process as a product of these groups. Overall, I believe that with more time and integration with the robot arm, more rigorous analysis can be performed to test the recognizability and constructability of the new designs.
 
-<img width="398" height="533" alt="BloxNet_nonintuitive (1)" src="https://github.com/user-attachments/assets/f0b24c4f-ccd5-44be-9beb-32c9c715dd4f" />
-
 <img width="511" height="644" alt="BloxNet_intuitive (1)" src="https://github.com/user-attachments/assets/b6ec5238-f077-4d3c-bf8f-768ad2af4f37" />
+
+<img width="398" height="533" alt="BloxNet_nonintuitive (1)" src="https://github.com/user-attachments/assets/f0b24c4f-ccd5-44be-9beb-32c9c715dd4f" />
